@@ -8,15 +8,18 @@ import com.tangwuji.reggie.service.UserService;
 import com.tangwuji.reggie.utils.EmailUtil;
 import com.tangwuji.reggie.utils.JwtUtil;
 import com.tangwuji.reggie.utils.ValidateCodeUtils;
+import jakarta.annotation.Resource;
 import jakarta.mail.internet.AddressException;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/user")
@@ -27,6 +30,8 @@ public class UserController {
     private UserService userService;
     @Autowired
     private EmailService emailService;
+    @Resource
+    private RedisTemplate redisTemplate;
     //用户接口
     /**
      * 验证码
@@ -42,8 +47,8 @@ public class UserController {
             log.info("生成的随机验证码为：{}",code);
             //调用阿里云短信api
             //SMSUtils.sendMessage("阿里云短信测试","SMS_154950909",phone,code);
-            //将该code存入本次session
-             httpSession.setAttribute("code",code);
+
+            httpSession.setAttribute("code",code);
         }
         return R.success(httpSession.getAttribute("code"),"success");
     }
@@ -57,7 +62,6 @@ public class UserController {
     @PostMapping("/sendEmail")
     @ResponseBody
     public R<Object> sendEmail(@RequestBody User user)
-
             throws AddressException {
         String email = user.getEmail();
 
@@ -70,6 +74,10 @@ public class UserController {
             }
                 //发送邮件
                 String code = ValidateCodeUtils.generateValidateCode(6).toString();
+                //将该code存入redis缓存中设置过期时间为60s
+                redisTemplate.opsForValue().setIfAbsent(email,code,1, TimeUnit.MINUTES);
+                Object codes = redisTemplate.opsForValue().get(user.getEmail());
+                log.info("redis中获取的验证码为：{}",codes);
                 emailService.sendEmail(email,code);
 
                 return R.success("发送成功！请前往邮箱查看");
@@ -82,17 +90,18 @@ public class UserController {
 
     //验证验证码，前端验证码携带在请求参数中
     @PostMapping("/login")
-    public R<String> login(@RequestBody Map<String,String> map, HttpSession httpSession){
-        Object checkCode = httpSession.getAttribute("code");
-        log.info("校验验证码为：{}",checkCode);
-        String code = map.get("code");
-        log.info("验证码为：{}",code);
+    public R<String> login(@RequestBody Map<String,String> map){
         String email = map.get("email");
         log.info("邮箱为：{}",email);
+        String checkCode = (String) redisTemplate.opsForValue().get(email);
+        log.info("校验验证码为：{}",checkCode);
+        String code = map.get("code");
+        log.info("用户填写验证码为：{}",code);
+
 
 
         //先判断用户填写的验证码是否正确，如果正确继续，错误返回错误信息
-        if (StringUtils.isNotEmpty(code) && StringUtils.isNotEmpty(email)){
+        if (StringUtils.isNotEmpty(code) && StringUtils.isNotEmpty(email) && StringUtils.isNotEmpty(checkCode)&&checkCode.equals(code)){
             //手机号和验证码无问题
 
             //判断该用户是否为新用户

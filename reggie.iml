@@ -56,7 +56,6 @@
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-jdbc:3.1.4" level="project" />
     <orderEntry type="library" name="Maven: com.zaxxer:HikariCP:5.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-jdbc:6.0.12" level="project" />
-    <orderEntry type="library" name="Maven: org.springframework:spring-tx:6.0.12" level="project" />
     <orderEntry type="library" name="Maven: org.mybatis.spring.boot:mybatis-spring-boot-autoconfigure:3.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.mybatis:mybatis:3.5.13" level="project" />
     <orderEntry type="library" name="Maven: org.mybatis:mybatis-spring:3.0.2" level="project" />
@@ -151,5 +150,20 @@
     <orderEntry type="library" name="Maven: org.springframework:spring-context-support:6.0.12" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.angus:jakarta.mail:1.1.0" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.eclipse.angus:angus-activation:2.0.1" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-data-redis:3.1.4" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.data:spring-data-redis:3.1.4" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.data:spring-data-keyvalue:3.1.4" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.data:spring-data-commons:3.1.4" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-tx:6.0.12" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-oxm:6.0.12" level="project" />
+    <orderEntry type="library" name="Maven: io.lettuce:lettuce-core:6.2.6.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-common:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-handler:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-resolver:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport-native-unix-common:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-codec:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-transport:4.1.97.Final" level="project" />
+    <orderEntry type="library" name="Maven: io.projectreactor:reactor-core:3.5.10" level="project" />
   </component>
 </module>
