@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -80,6 +82,7 @@ public class SetMealController {
     /**
      * 批量启用禁用
      */
+    @CacheEvict(value = "setMeal",allEntries = true)//清除缓存
     @PostMapping("/status/{status}")
     public R<Object> updateSetMealDish(@PathVariable int status, String ids, String token) {
 
@@ -132,6 +135,7 @@ public class SetMealController {
     /**
      * 添加套餐
      */
+    @CacheEvict(value = "setMeal",allEntries = true)//清除缓存
     @PostMapping
     public R<Object> addSetMeal(@RequestBody SetmealDto setmealDto, HttpServletRequest request) {
         String jwt = JwtUtil.parseJwt(request.getParameter("token")).get("id").toString();
@@ -153,6 +157,7 @@ public class SetMealController {
         return R.success(setmealDto,"success");
     }
 
+    @Cacheable(value = "setMeal",key = "#setMeal.categoryId")//开启缓存键不序列化，值序列化
     @GetMapping("/list")
     public R<List<SetMeal>> returnSetMealInfo( SetMeal setMeal) {
         //这个接口只需要回写套餐，不需要回写套餐的菜品
@@ -171,6 +176,7 @@ public class SetMealController {
      * @param request
      * @return
      */
+    @CacheEvict(value = "setMeal",allEntries = true)//清除缓存
     @PutMapping
     public R<Object> updateSetMeal(@RequestBody SetmealDto setmealDto, HttpServletRequest request) {
         //前端传来的数据为setMealDto类型，这里的更新涉及到更新setMeal表和setMeal_dish表
@@ -185,8 +191,9 @@ public class SetMealController {
     /**
      * 套餐的删除
      */
+    @CacheEvict(value = "setMeal",allEntries = true)//清除缓存
     @DeleteMapping
-    private R<Object> deleteSetMeal(String ids,String token ){
+    public R<Object> deleteSetMeal(String ids,String token ){
         String[] splitIds = ids.split(",");
         List<Long> idsList = new ArrayList<>();
         for (String splitId : splitIds) {
