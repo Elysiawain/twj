@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -31,7 +31,7 @@ public class UserController {
     @Autowired
     private EmailService emailService;
     @Resource
-    private RedisTemplate redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
     //用户接口
     /**
      * 验证码
@@ -47,7 +47,7 @@ public class UserController {
             log.info("生成的随机验证码为：{}",code);
             //调用阿里云短信api
             //SMSUtils.sendMessage("阿里云短信测试","SMS_154950909",phone,code);
-
+            //stringRedisTemplate.opsForValue().set(phone,code,5, TimeUnit.MINUTES);
             httpSession.setAttribute("code",code);
         }
         return R.success(httpSession.getAttribute("code"),"success");
@@ -75,8 +75,8 @@ public class UserController {
                 //发送邮件
                 String code = ValidateCodeUtils.generateValidateCode(6).toString();
                 //将该code存入redis缓存中设置过期时间为60s
-                redisTemplate.opsForValue().setIfAbsent(email,code,1, TimeUnit.MINUTES);
-                Object codes = redisTemplate.opsForValue().get(user.getEmail());
+                stringRedisTemplate.opsForValue().setIfAbsent(email,code,1, TimeUnit.MINUTES);
+                Object codes = stringRedisTemplate.opsForValue().get(user.getEmail());
                 log.info("redis中获取的验证码为：{}",codes);
                 emailService.sendEmail(email,code);
 
@@ -93,7 +93,7 @@ public class UserController {
     public R<String> login(@RequestBody Map<String,String> map){
         String email = map.get("email");
         log.info("邮箱为：{}",email);
-        String checkCode = (String) redisTemplate.opsForValue().get(email);
+        String checkCode = stringRedisTemplate.opsForValue().get(email);
         log.info("校验验证码为：{}",checkCode);
         String code = map.get("code");
         log.info("用户填写验证码为：{}",code);
