@@ -98,9 +98,10 @@ public class CategoryController {
      */
     @GetMapping("/list")
         public R<List<Category>> categoryList(Category category,String token){
-        if (token==null){
+        if (token== null){
             return R.error("请先登录");
         }
+
         String uid = JwtUtil.parseJwt(token).get("id").toString();
         log.info("用户id：{}",uid);//该方法只有用户端才会调用
         log.info("菜品列表请求");

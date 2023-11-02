@@ -12,19 +12,23 @@ import com.tangwuji.reggie.pojo.DishFlavor;
 import com.tangwuji.reggie.service.CategoryService;
 import com.tangwuji.reggie.service.DishFlavorService;
 import com.tangwuji.reggie.service.DishService;
-import com.tangwuji.reggie.service.SetMealService;
 import com.tangwuji.reggie.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 //菜品管理
@@ -41,8 +45,10 @@ public class DishController {
     private DishFlavorService dishFlavorService;
     @Autowired
     private CategoryService categoryService;
-    @Autowired
-    private SetMealService setMealService;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private RedisTemplate redisTemplate;
 
     //分页查询（这里逻辑需要将菜品分类也一同查询出来）
     @GetMapping("/page")
@@ -88,9 +94,23 @@ public class DishController {
         DishDto dishDto =dishService.getByIdWithFlavor(returnId);
         return R.success(dishDto, "success");
     }
+
     //套餐菜品回写
     @GetMapping("/list")
-    public R<List<DishDto>> returnDishList(String categoryId) {
+    public R<List<DishDto>> returnDishList(Dish dishes) {
+        long startTime = System.currentTimeMillis();
+        String  categoryId = dishes.getCategoryId().toString();
+        //将菜品信息写进redis缓存
+        String key = "dish_" + categoryId;
+        log.info("套餐菜品回写key——{}",key);
+        List<DishDto> redisDishList= (List<DishDto>) redisTemplate.opsForValue().get(key);
+        if (redisDishList!=null&&redisDishList.size()>0){
+            //缓存有值直接返回结果
+            log.info("缓存有值直接返回结果");
+            long redisEndTime = System.currentTimeMillis();
+            log.info("走redis回写耗时——{}ms",(redisEndTime-startTime));
+            return R.success(redisDishList);
+        }//不存在继续以前步骤
         //在回写的时候应该将dish的口味也返回给前端
         log.info("套餐菜品回写id——{}",categoryId);
         //查询对应categoryId的dish,并回写
@@ -120,7 +140,10 @@ public class DishController {
             dishDto.setFlavors(dishFlavors);
             return dishDto;
         }).collect(Collectors.toList());
-
+        //将菜品数据添加进入缓存
+        long mySqlEndTime = System.currentTimeMillis();
+        log.info("走MySql回写耗时——{}ms",(mySqlEndTime-startTime));
+        redisTemplate.opsForValue().set(key,dishDtoList,1, TimeUnit.HOURS);
         return R.success(dishDtoList,"success");
     }
 
@@ -130,6 +153,8 @@ public class DishController {
     @PostMapping("/status/{status}")
     public R<Object> updateDish(@PathVariable int status, String ids, String token) {
 
+        Set<String> keys = stringRedisTemplate.keys("dish*");
+        keys.forEach(key->redisTemplate.delete(key));
         log.info("jwt：{}", token);
         log.info("操作菜品id:{}", ids);
         String[] splitIds = ids.split(",");
@@ -142,6 +167,7 @@ public class DishController {
 
             List<Long> dishIds = new ArrayList<>();
             for (String id : splitIds) {
+
                 dishIds.add(Long.parseLong(id));//添加进入list集合
             }
             //利用MP,进行数据批量查询修改
@@ -169,6 +195,7 @@ public class DishController {
         log.info(splitIds.toString());
         log.info("执行起禁售操作");
         dishService.updateByIds(ids, status, updateId);
+
         return R.success("修改成功！", "success");
     }
 
@@ -204,6 +231,9 @@ public class DishController {
         }).collect(Collectors.toList());
         //执行更新flavor操作
         dishFlavorService.saveBatch(flavors);
+        //删除菜品缓存
+        Set<String> keys = stringRedisTemplate.keys("dish_*");
+        keys.forEach(key->redisTemplate.delete(key));
         return R.success("添加成功", "success");
     }
 
@@ -215,6 +245,12 @@ public class DishController {
         Claims parseJwt = JwtUtil.parseJwt(request.getParameter("token"));
         long updateId = Long.parseLong(parseJwt.get("id").toString());
         dishService.updateDishDto(dishDto, updateId);
+        //删除对应的菜品缓存
+        String key = "dish_" + dishDto.getCategoryId();
+        Boolean delete = redisTemplate.delete(key);
+        if (delete){
+            log.info("删除菜品缓存成功");
+        }
         return R.success("更新成功", "success");
     }
 
@@ -238,6 +274,9 @@ public class DishController {
         //先考虑这个删除能不能直接删除，很明显不能，如果当前菜品关联有套餐则不能删除，
         //查询是否有关联的套餐
         R<Object> checkDeleted=dishService.deletedWithDish(idsList);
+        //删除对应的菜品缓存
+        Set<String> keys = stringRedisTemplate.keys("dish_*");
+        keys.forEach(key->redisTemplate.delete(key));
         return checkDeleted;
     }
 }

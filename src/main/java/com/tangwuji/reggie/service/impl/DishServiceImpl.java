@@ -126,6 +126,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             return R.error("当前菜品已上架，请先下架");
         }
         this.removeByIds(idsList);
+
         return R.success("删除成功","success");
     }
 }

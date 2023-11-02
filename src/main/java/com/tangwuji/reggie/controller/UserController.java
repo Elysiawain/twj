@@ -75,7 +75,7 @@ public class UserController {
                 //发送邮件
                 String code = ValidateCodeUtils.generateValidateCode(6).toString();
                 //将该code存入redis缓存中设置过期时间为60s
-                stringRedisTemplate.opsForValue().setIfAbsent(email,code,1, TimeUnit.MINUTES);
+                stringRedisTemplate.opsForValue().setIfAbsent(email,code,3, TimeUnit.MINUTES);
                 Object codes = stringRedisTemplate.opsForValue().get(user.getEmail());
                 log.info("redis中获取的验证码为：{}",codes);
                 emailService.sendEmail(email,code);
@@ -127,6 +127,8 @@ public class UserController {
                 checkUser.setName("邮箱用户"+email);
             }
             String name = checkUser.getName();
+            //登录成功删除缓存
+            stringRedisTemplate.delete(email);
             return R.success(name,jwt);//给前端返回jwt令牌，和用户数据
         }
         return R.error("登陆失败！");

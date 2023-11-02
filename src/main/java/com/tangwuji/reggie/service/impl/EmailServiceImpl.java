@@ -43,7 +43,7 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject("菩提阁登录验证");
             Date date = new Date();
             //设置邮件的文本内容，其中使用了 HTML 标签来设置文本样式。具体来说，用了 <span> 标签来设置字体颜色，name 和 date 变量则是用于动态显示的内容。
-            helper.setText("<span>你的验证码为：</span>"+code+"<br>请勿泄露给他人。<br>"+date+"<br> <img src=\"https://javaweb-twj.oss-cn-beijing.aliyuncs.com/elysiaHead.jpg\" alt=\"\" style=\"width: 200px;\">");
+            helper.setText("<span>你的验证码为：</span>"+code+"<br>3分钟内有效，请勿泄露给他人！<br>"+date+"<br> <img src=\"https://javaweb-twj.oss-cn-beijing.aliyuncs.com/elysiaHead.jpg\" alt=\"\" style=\"width: 200px;\">");
 
             //发送附件
             //helper.addAttachment("文件名",new File("路径"));
