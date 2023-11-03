@@ -19,7 +19,7 @@ public class LoginConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         // 添加允许的请求头
         registry.addMapping("/**")
-                .allowedOrigins("http://127.0.0.1:5500") // 指定允许的域名
+                .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 指定允许的请求方法
                 .allowedHeaders("*") // 指定允许的请求头
                 .allowCredentials(true) // 是否允许携带cookie
