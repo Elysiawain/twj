@@ -4,7 +4,7 @@
 java-reggie项目仓库
 
 #### 软件架构
-软件架构说明
+本项目采用100%java开发，主要技术栈：springboot3+mybatis-plus（主体架构）；数据库部分：MySQL（数据存储）+Redis（数据缓存）
 
 
 
@@ -13,6 +13,7 @@ java-reggie项目仓库
 
 1.  下载zip文件，解压导入idea
 2.  在idea中添加仓库地址
+3.  修改其中相关配置
 
 #### 参与贡献
 
