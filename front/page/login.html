@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=no,minimal-ui">
+        <title>菩提阁</title>
+        <link rel="icon" href="./../images/favico.ico">
+        <!--不同屏幕尺寸根字体设置-->
+        <script src="./../js/base.js"></script>
+        <!--element-ui的样式-->
+        <link rel="stylesheet" href="../../backend/plugins/element-ui/index.css" />
+        <!--引入vant样式-->
+        <link rel="stylesheet" href="../styles/vant.min.css"/>
+        <!-- 引入样式  -->
+        <link rel="stylesheet" href="../styles/index.css" />
+        <!--本页面内容的样式-->
+        <link rel="stylesheet" href="./../styles/login.css" />
+        <style>
+            /* styles.css */
+
+            .centered-text {
+            display: inline-block;
+            vertical-align: middle;
+            text-align: center;
+            margin-top: 5px;
+            width: 100%;
+            height: 40px;
+            position: relative;
+            color:#FFC200;
+            font-size: 16px;
+            cursor: pointer;
+            /* background-color: red; */
+            }
+        </style>
+       
+      </head>
+    <body>
+        <div id="login" v-loading="loading">
+            <div class="divHead">登录</div>
+            <div class="divContainer">
+                <el-input placeholder=" 请输入邮箱" v-model="form.email"  maxlength='30' /></el-input>
+                <div class="divSplit"></div>
+                <el-input placeholder=" 请输入验证码" v-model="form.code"  maxlength='20'/></el-input>
+                <span @click='getCode' :style="{color: codeDisabled ? 'gray' : '#FFC200'} " :disabled="codeDisabled">{{buttonText}}
+                    <span v-if="codeDisabled" style="color: gray;">{{ countDown }}</span>
+                </span>
+                
+                
+                
+            </div>
+            <div class="divMsg" v-if="msgFlag">邮箱输入不正确，请重新输入</div>
+            <el-button type="primary" :class="{btnSubmit:1===1,btnNoPhone:!form.email,btnPhone:form.email}" @click="btnLogin">登录</el-button>
+            <div class="centered-text" @click="noMoney">为什么使用邮箱?</div>
+        </div>
+        <!-- 开发环境版本，包含了有帮助的命令行警告 -->
+        <script src="../../backend/plugins/vue/vue.js"></script>
+        <!-- 引入组件库 -->
+        <script src="../../backend/plugins/element-ui/index.js"></script>
+        <!-- 引入vant样式 -->
+        <script src="./../js/vant.min.js"></script>  
+        <!-- 引入axios -->
+        <script src="../../backend/plugins/axios/axios.min.js"></script>
+        <script src="./../js/request.js"></script>
+        <script src="./../api/login.js"></script>
+    </body>
+    <script>
+        new Vue({
+            el:"#login",
+            data(){
+                return {
+                    form:{
+                        email:'',
+                        code:''
+                    },
+                    msgFlag:false,
+                    loading:false,
+                    countDown:60,
+                    buttonText:'获取验证码',
+                    codeDisabled:false//倒计时显示，默认为false
+                }
+            },
+            computed:{},
+            created(){},
+            mounted(){
+            },
+            methods:{
+               async getCode(){
+                if (!this.codeDisabled) {
+                    //将getCode()禁用点击事件，
+                    // 防止用户多次点击发送验证码
+                    this.buttonText='重新发送'
+                    this.codeDisabled = true;//开启倒计时
+
+                    this.startCountdown();
+                    this.sendCode(); // 在这里添加发送验证码的逻辑
+                    }
+
+                },
+                startCountdown() {
+                    setInterval(() => {
+                    this.countDown--;
+                    if (this.countDown <= 0) {
+                        this.countDown = 60;
+                        //倒计时结束，将按钮文字改为原样
+                        this.buttonText = '获取验证码';
+                        this.codeDisabled = false;
+                    }
+                    }, 1000);
+                },
+               async sendCode() {
+                    this.form.code = ''
+                    // const regex = /^(13[0-9]{9})|(15[0-9]{9})|(17[0-9]{9})|(18[0-9]{9})|(19[0-9]{9})$/;
+                    const regex = /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/;//验证邮箱
+                    if (regex.test(this.form.email)) {
+                        this.msgFlag = false
+                        //发送验证码请求
+                        const res= await sendCode({email:this.form.email})
+                       // this.form.code = (Math.random()*1000000).toFixed(0)
+                    }else{
+                        this.msgFlag = true
+                    }
+
+                },
+                async btnLogin(){
+                    if(this.form.email && this.form.code){
+                        this.loading = true
+                        const res = await loginApi({email:this.form.email,code:this.form.code})
+                    
+                        this.loading = false
+
+                        if(res.code === 1){
+                            sessionStorage.setItem("userEmail",this.form.email)
+                            sessionStorage.setItem("userId",res.msg)
+                            sessionStorage.setItem("username",res.data)
+                            console.log(res.data.msg);
+                            window.requestAnimationFrame(()=>{
+                                window.location.href= '/front/index.html'
+                            })                           
+                        }else{
+                            this.$notify({ type:'warning', message:res.msg});
+                        }
+                    }else{
+                        this.$notify({ type:'warning', message:'请输入邮箱'});
+                    }
+                },
+
+            noMoney(){
+                this.$notify({ type:'warning', message:'短信要钱，作者太穷 ಥ_ಥ'})
+            }
+            }
+
+        })
+    </script>
+</html>
