@@ -16,11 +16,11 @@ public class AliOSSUtil {
     //这里利用配置文件进行注入
     private static final String ENDPOINT ="https://oss-cn-beijing.aliyuncs.com";
 
-    private  static final String ACCESS_KEY_ID ="LTAI5tCNWizDWJxUcrVeBYYp";
+    private  static final String ACCESS_KEY_ID ="your access key id";
 
-    private static final String ACCESS_KEY_SECRET ="1bT77tcR29zYvoCkTga5L1a2cmY6G4";
+    private static final String ACCESS_KEY_SECRET ="your access key secret";
 
-    private static final String BUCKET_NAME ="javaweb-twj";
+    private static final String BUCKET_NAME ="your bucket name";
 
     /**
      * 将文件上传到阿里OSS
